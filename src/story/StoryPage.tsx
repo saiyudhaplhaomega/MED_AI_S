@@ -98,14 +98,14 @@ function StoryPageContent({ model }: { model: CaseModel }) {
     <main className="story-page" ref={root}>
       <nav className="story-nav" aria-label="Story navigation">
         <Link to="/" className="story-back">← Back to workspace</Link>
-        <span>Evidence in motion</span>
+        <span>MEDALS · Medical AI Legal Service</span>
       </nav>
 
       <section className="story-title story-section" aria-labelledby="story-title">
         <div className="story-orbit story-orbit-one" />
         <div className="story-orbit story-orbit-two" />
         <div className="story-title-content">
-          <p className="story-kicker story-intro-reveal">Treatment story</p>
+          <p className="story-kicker story-intro-reveal">MEDALS · Medical AI Legal Service</p>
           <h1 id="story-title" className="story-intro-reveal">{model.name}</h1>
           <p className="story-date-range story-intro-reveal">{formatRange(model.stats.firstDate, model.stats.lastDate)}</p>
           <p className="story-encounters story-intro-reveal"><strong>{model.stats.totalEvents.toLocaleString()}</strong> medical encounters</p>
