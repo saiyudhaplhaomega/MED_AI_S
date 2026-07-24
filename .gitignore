@@ -6,5 +6,6 @@ dist/
 .vercel/
 SWANS_INSTRUCTIONS/
 graphify-out/
-public/samples/
 .DS_Store
+
+.vercel
