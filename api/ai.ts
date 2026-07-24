@@ -22,6 +22,56 @@ interface HeadlineEventInput {
   bodyParts: string[];
 }
 
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+async function callGemini(messages: ChatMessage[], temperature: number): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
+
+  const system = messages
+    .filter((m) => m.role === "system")
+    .map((m) => m.content)
+    .join("\n\n");
+  const user = messages
+    .filter((m) => m.role === "user")
+    .map((m) => m.content)
+    .join("\n\n");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: user }] }],
+          systemInstruction: { parts: [{ text: system }] },
+          generationConfig: { temperature },
+        }),
+        signal: controller.signal,
+      }
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      throw new Error(`Gemini API error ${response.status}: ${errorBody.slice(0, 300)}`);
+    }
+
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts
+      ?.map((p: { text?: string }) => p.text)
+      .filter(Boolean)
+      .join("");
+    if (typeof text !== "string" || text.length === 0) throw new Error("Gemini API returned no content");
+    return text;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function callGateway(messages: ChatMessage[]): Promise<string> {
   const gatewayUrl = process.env.N8N_AI_WEBHOOK_URL;
   if (!gatewayUrl) throw new Error("N8N_AI_WEBHOOK_URL is not configured");
@@ -57,16 +107,25 @@ async function callGateway(messages: ChatMessage[]): Promise<string> {
 }
 
 async function callMiniMax(messages: ChatMessage[], temperature: number): Promise<string> {
-  // The n8n gateway (n8n credits) is the primary path; the direct MiniMax key
-  // is the fallback because the current key has no platform API credits.
+  // Engine priority: Gemini free tier, then the n8n gateway (n8n credits),
+  // then the direct MiniMax key. The user's MiniMax Token Plan is currently
+  // out of API usage, so the later paths are resilience, not the happy path.
+  const failures: string[] = [];
+
+  try {
+    return await callGemini(messages, temperature);
+  } catch (err) {
+    failures.push(err instanceof Error ? err.message : "gemini failed");
+  }
+
   try {
     return await callGateway(messages);
-  } catch {
-    // fall through to the direct call
+  } catch (err) {
+    failures.push(err instanceof Error ? err.message : "gateway failed");
   }
 
   const apiKey = process.env.MINIMAX_API_KEY;
-  if (!apiKey) throw new Error("MINIMAX_API_KEY is not configured");
+  if (!apiKey) throw new Error(`All AI paths failed: ${failures.join(" | ")}`);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);

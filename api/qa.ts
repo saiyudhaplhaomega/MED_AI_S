@@ -56,6 +56,63 @@ function extractCitations(answer: string, ids: Record<string, string>): QaCitati
   return citations;
 }
 
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+function qaSystemPrompt(caseDigest: string): string {
+  return `You are a medical-chronology assistant helping a personal-injury attorney. Answer the question using ONLY facts in the case digest below. Every factual claim must cite the source event as [#exhibit]. If the answer is not in the record, say so plainly. Keep the answer under 120 words unless the question asks for a list. ${GUARDRAILS}\n\nCase digest:\n${caseDigest}`;
+}
+
+async function callGeminiQa(
+  caseDigest: string,
+  question: string,
+  history: HistoryTurn[]
+): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
+
+  const contents = [
+    ...history.map((h) => ({
+      role: h.role === "assistant" ? "model" : "user",
+      parts: [{ text: h.content }],
+    })),
+    { role: "user", parts: [{ text: question }] },
+  ];
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          contents,
+          systemInstruction: { parts: [{ text: qaSystemPrompt(caseDigest) }] },
+          generationConfig: { temperature: 0.3 },
+        }),
+        signal: controller.signal,
+      }
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      throw new Error(`Gemini API error ${response.status}: ${errorBody.slice(0, 300)}`);
+    }
+
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts
+      ?.map((p: { text?: string }) => p.text)
+      .filter(Boolean)
+      .join("");
+    if (typeof text !== "string" || text.length === 0) throw new Error("Gemini API returned no content");
+    return text.trim();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function callMiniMaxQa(
   caseDigest: string,
   question: string,
@@ -64,7 +121,7 @@ async function callMiniMaxQa(
   const apiKey = process.env.MINIMAX_API_KEY;
   if (!apiKey) throw new Error("MINIMAX_API_KEY is not configured");
 
-  const system = `You are a medical-chronology assistant helping a personal-injury attorney. Answer the question using ONLY facts in the case digest below. Every factual claim must cite the source event as [#exhibit]. If the answer is not in the record, say so plainly. Keep the answer under 120 words unless the question asks for a list. ${GUARDRAILS}\n\nCase digest:\n${caseDigest}`;
+  const system = qaSystemPrompt(caseDigest);
 
   const messages = [
     { role: "system", content: system },
@@ -155,7 +212,11 @@ export default async function handler(req: any, res: any) {
     try {
       answer = await callN8n(body.caseDigest, body.question, history);
     } catch {
-      answer = await callMiniMaxQa(body.caseDigest, body.question, history);
+      try {
+        answer = await callGeminiQa(body.caseDigest, body.question, history);
+      } catch {
+        answer = await callMiniMaxQa(body.caseDigest, body.question, history);
+      }
     }
 
     sendJson(res, 200, { answer, citations: extractCitations(answer, ids) });
