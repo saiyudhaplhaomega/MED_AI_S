@@ -9,10 +9,11 @@ Line format: `- HH:MM done|doing|blocked: <one line>`
 ## Codex-1 (core app)
 
 - 12:55 done: Parser, normalization, severity/flags, stats, and phase derivation implemented; production build passes.
+- 13:00 done: Custom SVG seismograph added with phase bands, gaps, flags, milestones, tooltip, and date brush.
 
 ## Codex-2 (story mode)
 
-- (nothing yet)
+- 14:32 doing: Story Mode built in src/story with runtime SVG terrain, phase chapters, gaps, reduced-motion fallback, and print export. Full build currently blocked by existing src/core/Seismograph.tsx nullability errors.
 
 ## MiniMax (AI + n8n)
 
