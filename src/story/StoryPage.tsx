@@ -97,7 +97,7 @@ function StoryPageContent({ model }: { model: CaseModel }) {
   return (
     <main className="story-page" ref={root}>
       <nav className="story-nav" aria-label="Story navigation">
-        <Link to="/" className="story-back">← Back to workspace</Link>
+        <Link to="/app" className="story-back">← Back to workspace</Link>
         <span>MEDALS · Medical AI Legal Service</span>
       </nav>
 
@@ -157,7 +157,7 @@ function StoryPageContent({ model }: { model: CaseModel }) {
         <h2 id="story-finale-title">A treatment course<br />with a visible arc.</h2>
         <div className="story-mini-terrain" aria-hidden="true"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={terrainPath(model.events)} /></svg></div>
         <div className="story-totals"><span>{countLabel(model.stats.totalEvents, "encounter", "encounters")}</span><span>{countLabel(model.stats.providerCount, "provider", "providers")}</span><span>{spanMonths} months</span></div>
-        <div className="story-actions"><Link to="/" className="story-button story-button-primary">Back to workspace</Link><button type="button" className="story-button" onClick={() => window.print()}>Export</button></div>
+        <div className="story-actions"><Link to="/app" className="story-button story-button-primary">Back to workspace</Link><button type="button" className="story-button" onClick={() => window.print()}>Export</button></div>
       </section>
     </main>
   );
@@ -165,5 +165,5 @@ function StoryPageContent({ model }: { model: CaseModel }) {
 
 export default function StoryPage() {
   const caseModel = useCaseStore((state) => state.caseModel);
-  return caseModel ? <StoryPageContent model={caseModel} /> : <Navigate to="/" replace />;
+  return caseModel ? <StoryPageContent model={caseModel} /> : <Navigate to="/app" replace />;
 }
