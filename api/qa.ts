@@ -43,14 +43,36 @@ function sendJson(res: any, status: number, payload: unknown): void {
 function extractCitations(answer: string, ids: Record<string, string>): QaCitation[] {
   const seen = new Set<number>();
   const citations: QaCitation[] = [];
-  const pattern = /\[#(\d+)\]/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = pattern.exec(answer)) !== null) {
-    const exhibit = Number(match[1]);
-    if (seen.has(exhibit)) continue;
+  const push = (exhibit: number) => {
+    if (seen.has(exhibit) || citations.length >= 80) return;
     seen.add(exhibit);
     citations.push({ exhibit, eventId: ids[String(exhibit)] ?? "" });
+  };
+
+  // Handles [#12], [#12-#30], and mixed groups like [#12, #14-#16, #20].
+  const groupPattern = /\[([#\d\s,–-]+)\]/g;
+  let group: RegExpExecArray | null;
+  while ((group = groupPattern.exec(answer)) !== null) {
+    const body = group[1];
+    if (!body.includes("#")) continue;
+
+    const consumed: [number, number][] = [];
+    const rangePattern = /#(\d+)\s*[-–]\s*#?(\d+)/g;
+    let match: RegExpExecArray | null;
+    while ((match = rangePattern.exec(body)) !== null) {
+      consumed.push([match.index, match.index + match[0].length]);
+      const start = Number(match[1]);
+      const end = Number(match[2]);
+      if (end >= start && end - start <= 500) {
+        for (let n = start; n <= end; n++) push(n);
+      }
+    }
+
+    const singlePattern = /#(\d+)/g;
+    while ((match = singlePattern.exec(body)) !== null) {
+      const at = match.index;
+      if (!consumed.some(([s, e]) => at >= s && at < e)) push(Number(match[1]));
+    }
   }
 
   return citations;
