@@ -22,7 +22,49 @@ interface HeadlineEventInput {
   bodyParts: string[];
 }
 
+async function callGateway(messages: ChatMessage[]): Promise<string> {
+  const gatewayUrl = process.env.N8N_AI_WEBHOOK_URL;
+  if (!gatewayUrl) throw new Error("N8N_AI_WEBHOOK_URL is not configured");
+
+  const system = messages
+    .filter((m) => m.role === "system")
+    .map((m) => m.content)
+    .join("\n\n");
+  const user = messages
+    .filter((m) => m.role === "user")
+    .map((m) => m.content)
+    .join("\n\n");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 45_000);
+
+  try {
+    const response = await fetch(gatewayUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ system, user }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) throw new Error(`AI gateway error ${response.status}`);
+
+    const data = await response.json();
+    if (typeof data?.text !== "string") throw new Error("AI gateway returned no text");
+    return data.text;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function callMiniMax(messages: ChatMessage[], temperature: number): Promise<string> {
+  // The n8n gateway (n8n credits) is the primary path; the direct MiniMax key
+  // is the fallback because the current key has no platform API credits.
+  try {
+    return await callGateway(messages);
+  } catch {
+    // fall through to the direct call
+  }
+
   const apiKey = process.env.MINIMAX_API_KEY;
   if (!apiKey) throw new Error("MINIMAX_API_KEY is not configured");
 
