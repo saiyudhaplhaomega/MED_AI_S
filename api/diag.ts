@@ -15,7 +15,7 @@ async function probe(name: string, url: string, headers: Record<string, string>,
       signal: controller.signal,
     });
     const text = await response.text();
-    return { name, status: response.status, snippet: text.slice(0, 180) };
+    return { name, status: response.status, snippet: text.slice(0, 220) };
   } catch (err) {
     return { name, status: 0, snippet: err instanceof Error ? err.message : "failed" };
   } finally {
@@ -31,25 +31,14 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  const v2 = "https://api.minimax.io/v1/text/chatcompletion_v2";
+  const auth = { authorization: `Bearer ${key}` };
+  const messages = [{ role: "user", content: "Say hi in two words." }];
+
   const results = await Promise.all([
-    probe(
-      "openai-compat chat/completions M2.7",
-      "https://api.minimax.io/v1/chat/completions",
-      { authorization: `Bearer ${key}` },
-      { model: "MiniMax-M2.7", messages: [{ role: "user", content: "hi" }], max_tokens: 8 }
-    ),
-    probe(
-      "anthropic-compat messages M2.7",
-      "https://api.minimax.io/anthropic/v1/messages",
-      { authorization: `Bearer ${key}`, "x-api-key": key, "anthropic-version": "2023-06-01" },
-      { model: "MiniMax-M2.7", max_tokens: 8, messages: [{ role: "user", content: "hi" }] }
-    ),
-    probe(
-      "legacy chatcompletion_v2 M2.7",
-      "https://api.minimax.io/v1/text/chatcompletion_v2",
-      { authorization: `Bearer ${key}` },
-      { model: "MiniMax-M2.7", messages: [{ sender_type: "USER", sender_name: "user", text: "hi" }] }
-    ),
+    probe("v2 role/content MiniMax-M2.7", v2, auth, { model: "MiniMax-M2.7", messages, max_tokens: 16 }),
+    probe("v2 role/content MiniMax-M1", v2, auth, { model: "MiniMax-M1", messages, max_tokens: 16 }),
+    probe("v2 role/content MiniMax-Text-01", v2, auth, { model: "MiniMax-Text-01", messages, max_tokens: 16 }),
   ]);
 
   res.statusCode = 200;
