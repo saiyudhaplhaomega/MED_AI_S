@@ -22,7 +22,7 @@ interface HeadlineEventInput {
   bodyParts: string[];
 }
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 
 async function callGemini(messages: ChatMessage[], temperature: number): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;

@@ -56,7 +56,7 @@ function extractCitations(answer: string, ids: Record<string, string>): QaCitati
   return citations;
 }
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 
 function qaSystemPrompt(caseDigest: string): string {
   return `You are a medical-chronology assistant helping a personal-injury attorney. Answer the question using ONLY facts in the case digest below. Every factual claim must cite the source event as [#exhibit]. If the answer is not in the record, say so plainly. Keep the answer under 120 words unless the question asks for a list. ${GUARDRAILS}\n\nCase digest:\n${caseDigest}`;
