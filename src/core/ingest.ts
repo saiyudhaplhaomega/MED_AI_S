@@ -18,17 +18,19 @@ const clean = (value: unknown) => String(value ?? "").trim();
 const normalized = (value: unknown) => clean(value).toLowerCase().replace(/[^a-z0-9]/g, "");
 const titleCase = (value: string) => value.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 
+function isoDate(year: number, month: number, day: number) { return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`; }
+
 function parseDate(value: unknown): string | null {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0, 10);
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return isoDate(value.getFullYear(), value.getMonth() + 1, value.getDate());
   if (typeof value === "number" && value > 0) {
     const parsed = XLSX.SSF.parse_date_code(value);
-    if (parsed) return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
+    if (parsed) return isoDate(parsed.y, parsed.m, parsed.d);
   }
   const text = clean(value);
   if (!text) return null;
   const american = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   const candidate = american ? new Date(Number(american[3].length === 2 ? `20${american[3]}` : american[3]), Number(american[1]) - 1, Number(american[2])) : new Date(text);
-  return Number.isNaN(candidate.getTime()) ? null : `${candidate.getFullYear()}-${String(candidate.getMonth() + 1).padStart(2, "0")}-${String(candidate.getDate()).padStart(2, "0")}`;
+  return Number.isNaN(candidate.getTime()) ? null : isoDate(candidate.getFullYear(), candidate.getMonth() + 1, candidate.getDate());
 }
 
 function findHeaders(rows: unknown[][]): { row: number; fields: Partial<Record<Field, number>>; map: Record<string, string> } {
