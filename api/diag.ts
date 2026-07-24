@@ -46,18 +46,17 @@ export default async function handler(req: any, res: any) {
   }
 
   const geminiKey = process.env.GEMINI_API_KEY || "";
-  const geminiModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-
-  const results = await Promise.all([
-    probe(
-      `gemini ${geminiModel} (key ${geminiKey ? "present" : "MISSING"})`,
-      `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`,
-      {},
-      { contents: [{ role: "user", parts: [{ text: "Say hi in two words." }] }] }
-    ),
-  ]);
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}&pageSize=50`
+  );
+  const data = await response.json().catch(() => null);
+  const models = Array.isArray(data?.models)
+    ? data.models
+        .filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"))
+        .map((m: any) => m.name)
+    : data;
 
   res.statusCode = 200;
   res.setHeader("content-type", "application/json");
-  res.end(JSON.stringify({ results }, null, 2));
+  res.end(JSON.stringify({ status: response.status, models }, null, 2));
 }
