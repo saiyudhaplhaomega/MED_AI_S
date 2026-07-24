@@ -219,17 +219,21 @@ export default async function handler(req: any, res: any) {
 
   try {
     let answer: string;
+    let source: "n8n" | "gemini" | "minimax";
     try {
       answer = await callN8n(body.caseDigest, body.question, history);
+      source = "n8n";
     } catch {
       try {
         answer = await callGeminiQa(body.caseDigest, body.question, history);
+        source = "gemini";
       } catch {
         answer = await callMiniMaxQa(body.caseDigest, body.question, history);
+        source = "minimax";
       }
     }
 
-    sendJson(res, 200, { answer, citations: extractCitations(answer, ids) });
+    sendJson(res, 200, { answer, source, citations: extractCitations(answer, ids) });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Q&A request failed";
     sendJson(res, 502, { error: message });
