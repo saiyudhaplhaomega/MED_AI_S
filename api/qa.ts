@@ -56,7 +56,10 @@ function extractCitations(answer: string, ids: Record<string, string>): QaCitati
   return citations;
 }
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+const GEMINI_MODELS = [
+  process.env.GEMINI_MODEL || "gemini-flash-latest",
+  process.env.GEMINI_FALLBACK_MODEL || "gemini-flash-lite-latest",
+];
 
 function qaSystemPrompt(caseDigest: string): string {
   return `You are a medical-chronology assistant helping a personal-injury attorney. Answer the question using ONLY facts in the case digest below. Every factual claim must cite the source event as [#exhibit]. If the answer is not in the record, say so plainly. Only answer questions about this case record; if the question is unrelated to the case, briefly say that is outside the case record. Keep the answer under 120 words unless the question asks for a list or grouping. Format answers as clean markdown: bold group headers, short bullet lines, and collapse consecutive exhibit numbers into ranges like [#12-#30]. ${GUARDRAILS}\n\nCase digest:\n${caseDigest}`;
@@ -78,39 +81,46 @@ async function callGeminiQa(
     { role: "user", parts: [{ text: question }] },
   ];
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30_000);
+  let lastError: Error | null = null;
+  for (const model of GEMINI_MODELS) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          contents,
-          systemInstruction: { parts: [{ text: qaSystemPrompt(caseDigest) }] },
-          generationConfig: { temperature: 0.3 },
-        }),
-        signal: controller.signal,
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            contents,
+            systemInstruction: { parts: [{ text: qaSystemPrompt(caseDigest) }] },
+            generationConfig: { temperature: 0.3 },
+          }),
+          signal: controller.signal,
+        }
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => "");
+        throw new Error(`Gemini ${model} error ${response.status}: ${errorBody.slice(0, 200)}`);
       }
-    );
 
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "");
-      throw new Error(`Gemini API error ${response.status}: ${errorBody.slice(0, 300)}`);
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts
+        ?.map((p: { text?: string }) => p.text)
+        .filter(Boolean)
+        .join("");
+      if (typeof text !== "string" || text.length === 0)
+        throw new Error(`Gemini ${model} returned no content`);
+      return text.trim();
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error("gemini failed");
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts
-      ?.map((p: { text?: string }) => p.text)
-      .filter(Boolean)
-      .join("");
-    if (typeof text !== "string" || text.length === 0) throw new Error("Gemini API returned no content");
-    return text.trim();
-  } finally {
-    clearTimeout(timeout);
   }
+  throw lastError ?? new Error("Gemini failed");
 }
 
 async function callMiniMaxQa(

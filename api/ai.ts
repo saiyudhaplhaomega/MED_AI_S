@@ -22,27 +22,24 @@ interface HeadlineEventInput {
   bodyParts: string[];
 }
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+const GEMINI_MODELS = [
+  process.env.GEMINI_MODEL || "gemini-flash-latest",
+  process.env.GEMINI_FALLBACK_MODEL || "gemini-flash-lite-latest",
+];
 
-async function callGemini(messages: ChatMessage[], temperature: number): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
-
-  const system = messages
-    .filter((m) => m.role === "system")
-    .map((m) => m.content)
-    .join("\n\n");
-  const user = messages
-    .filter((m) => m.role === "user")
-    .map((m) => m.content)
-    .join("\n\n");
-
+async function callGeminiModel(
+  model: string,
+  system: string,
+  user: string,
+  temperature: number,
+  apiKey: string
+): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -57,7 +54,7 @@ async function callGemini(messages: ChatMessage[], temperature: number): Promise
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => "");
-      throw new Error(`Gemini API error ${response.status}: ${errorBody.slice(0, 300)}`);
+      throw new Error(`Gemini ${model} error ${response.status}: ${errorBody.slice(0, 200)}`);
     }
 
     const data = await response.json();
@@ -65,11 +62,36 @@ async function callGemini(messages: ChatMessage[], temperature: number): Promise
       ?.map((p: { text?: string }) => p.text)
       .filter(Boolean)
       .join("");
-    if (typeof text !== "string" || text.length === 0) throw new Error("Gemini API returned no content");
+    if (typeof text !== "string" || text.length === 0)
+      throw new Error(`Gemini ${model} returned no content`);
     return text;
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function callGemini(messages: ChatMessage[], temperature: number): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
+
+  const system = messages
+    .filter((m) => m.role === "system")
+    .map((m) => m.content)
+    .join("\n\n");
+  const user = messages
+    .filter((m) => m.role === "user")
+    .map((m) => m.content)
+    .join("\n\n");
+
+  let lastError: Error | null = null;
+  for (const model of GEMINI_MODELS) {
+    try {
+      return await callGeminiModel(model, system, user, temperature, apiKey);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error("gemini failed");
+    }
+  }
+  throw lastError ?? new Error("Gemini failed");
 }
 
 async function callGateway(messages: ChatMessage[]): Promise<string> {
@@ -150,6 +172,9 @@ async function callMiniMax(messages: ChatMessage[], temperature: number): Promis
     const text = data?.choices?.[0]?.message?.content;
     if (typeof text !== "string") throw new Error("MiniMax API returned no content");
     return text;
+  } catch (err) {
+    failures.push(err instanceof Error ? err.message : "minimax failed");
+    throw new Error(`All AI paths failed: ${failures.join(" | ")}`);
   } finally {
     clearTimeout(timeout);
   }
