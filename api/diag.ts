@@ -15,7 +15,17 @@ async function probe(name: string, url: string, headers: Record<string, string>,
       signal: controller.signal,
     });
     const text = await response.text();
-    return { name, status: response.status, snippet: text.slice(0, 220) };
+    try {
+      const parsed = JSON.parse(text);
+      return {
+        name,
+        status: response.status,
+        baseResp: parsed?.base_resp ?? null,
+        content: parsed?.choices?.[0]?.message?.content?.slice(0, 80) ?? null,
+      };
+    } catch {
+      return { name, status: response.status, snippet: text.slice(0, 220) };
+    }
   } catch (err) {
     return { name, status: 0, snippet: err instanceof Error ? err.message : "failed" };
   } finally {
