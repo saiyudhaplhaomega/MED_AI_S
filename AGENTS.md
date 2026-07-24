@@ -39,7 +39,7 @@ contract. Never write outside your directories except your own section of
    commented-out blocks, no TODO you could just do.
 4. Surgical diffs. Touch only what the task needs.
 5. Verify before declaring done. `npm run build` passes, then load
-   `public/samples/middleswarth.xlsx` (49 rows) AND `public/samples/garrison.xlsx`
+   the smallest sample (49 rows) AND the largest sample
    (820 rows) and click through what you built.
 6. If a library fights you for more than 15 minutes, write the 40 lines yourself.
 

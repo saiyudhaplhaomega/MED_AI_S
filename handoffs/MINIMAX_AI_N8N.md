@@ -70,8 +70,8 @@ The orchestrator has n8n MCP access and will import/activate your JSON and set
 
 ## 4. PDF skim (30 minutes, timeboxed)
 
-Skim 4 or 5 PDFs under `SWANS_INSTRUCTIONS/Medical Records-*/` (Middleswarth and
-Rogers folders). You are NOT parsing them into the app. You are validating our
+Skim 4 or 5 PDFs under the provided medical-records folders. You are NOT
+parsing them into the app. You are validating our
 heuristics against real records. Write `handoffs/PDF_NOTES.md`:
 
 - Record-type vocabulary that our SEVERITY_RULES / FLAG_RULES regexes would miss.

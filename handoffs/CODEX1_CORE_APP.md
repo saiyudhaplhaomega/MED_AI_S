@@ -122,9 +122,9 @@ gray the feature with a one-line notice. The app must be 100% usable offline.
 ## Acceptance checklist before you call it done
 
 - `npm run build` clean.
-- All five samples in `public/samples/` load with plausible counts and no console errors.
-- Garrison (820 rows) scrolls smoothly and the seismograph stays readable.
-- Caldwell shows 7 undated events in the shelf, not silently dropped.
+- The demo sample loads with plausible counts and no console errors.
+- the 820-row sample scrolls smoothly and the seismograph stays readable.
+- A sample with undated events shows those undated events in the shelf, not silently dropped.
 - A file with reordered/extra columns and a file with zero parseable dates load
   without crashing (make quick test fixtures yourself).
 - Click-to-PDF opens the Drive/search URL from the sample in a new tab.

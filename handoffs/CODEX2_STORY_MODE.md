@@ -53,7 +53,7 @@ recovery months should FEEL long without becoming a chore.
 - `prefers-reduced-motion`: render the same scenes as a static vertical sequence
   with no scrub.
 - Works at 375px wide and at desktop. Test both.
-- Garrison (820 events, 8 phases) must scroll at 60fps. Middleswarth (49 events)
+- the largest sample (820 events, 8 phases) must scroll at 60fps. the smallest sample (49 events)
   must still feel substantial, not empty.
 
 ## Integration contract
@@ -80,7 +80,7 @@ recovery months should FEEL long without becoming a chore.
 
 ## Acceptance checklist
 
-- `npm run build` clean; `/story` works for all five samples in `public/samples/`.
+- `npm run build` clean; `/story` works for the demo sample.
 - No case-specific strings, images, or thresholds anywhere in `src/story/`.
 - Reduced-motion mode shows all content without scrubbing.
-- 60fps scroll on Garrison in a normal laptop Chrome.
+- 60fps scroll on the largest sample in a normal laptop Chrome.
