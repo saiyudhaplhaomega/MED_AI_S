@@ -8,7 +8,7 @@ Line format: `- HH:MM done|doing|blocked: <one line>`
 
 ## Codex-1 (core app)
 
-- (nothing yet)
+- 12:55 done: Parser, normalization, severity/flags, stats, and phase derivation implemented; production build passes.
 
 ## Codex-2 (story mode)
 
