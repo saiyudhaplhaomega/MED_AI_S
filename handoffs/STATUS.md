@@ -10,6 +10,7 @@ Line format: `- HH:MM done|doing|blocked: <one line>`
 
 - 12:55 done: Parser, normalization, severity/flags, stats, and phase derivation implemented; production build passes.
 - 13:00 done: Custom SVG seismograph added with phase bands, gaps, flags, milestones, tooltip, and date brush.
+- 13:00 done: Workspace landing, sample uploads, local past cases, filters, virtual event list, drawers, key events, and accident milestone are implemented; build passes.
 
 ## Codex-2 (story mode)
 
