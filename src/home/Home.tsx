@@ -42,12 +42,6 @@ export default function Home() {
         >
           Open the workspace
         </Link>
-        <Link
-          to="/story"
-          className="rounded-lg border border-line bg-white px-6 py-3 text-lg font-semibold text-ink hover:border-ink"
-        >
-          Story Mode
-        </Link>
       </div>
 
       <div className="mt-14 grid gap-6 sm:grid-cols-3">

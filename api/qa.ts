@@ -59,7 +59,7 @@ function extractCitations(answer: string, ids: Record<string, string>): QaCitati
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 
 function qaSystemPrompt(caseDigest: string): string {
-  return `You are a medical-chronology assistant helping a personal-injury attorney. Answer the question using ONLY facts in the case digest below. Every factual claim must cite the source event as [#exhibit]. If the answer is not in the record, say so plainly. Keep the answer under 120 words unless the question asks for a list. ${GUARDRAILS}\n\nCase digest:\n${caseDigest}`;
+  return `You are a medical-chronology assistant helping a personal-injury attorney. Answer the question using ONLY facts in the case digest below. Every factual claim must cite the source event as [#exhibit]. If the answer is not in the record, say so plainly. Only answer questions about this case record; if the question is unrelated to the case, briefly say that is outside the case record. Keep the answer under 120 words unless the question asks for a list or grouping. Format answers as clean markdown: bold group headers, short bullet lines, and collapse consecutive exhibit numbers into ranges like [#12-#30]. ${GUARDRAILS}\n\nCase digest:\n${caseDigest}`;
 }
 
 async function callGeminiQa(
