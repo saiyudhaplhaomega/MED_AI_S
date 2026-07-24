@@ -15,7 +15,17 @@
   --color-line: #e4e2dc;
   --color-accident: #111827;
   --color-flag: #b7791f;
+}
 
+/*
+ * These tokens are only ever read via var(--color-sevN) / var(--color-catN)
+ * in inline styles and SVG attributes, never as literal Tailwind utility
+ * class names. Tailwind v4's @theme block tree-shakes entries it can't see
+ * used as a class name in the source, which silently dropped everything
+ * here except sev1/cat1 (their digits happened to appear in a comment).
+ * Keep them in a plain :root rule so they always ship.
+ */
+:root {
   --color-sev1: #e6d7ae;
   --color-sev2: #e3a72f;
   --color-sev3: #d95f2b;
