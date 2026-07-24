@@ -43,13 +43,18 @@ sample case for an instant view.
 
 MEDALS turns any medical-chronology Excel into an evidence-grade treatment
 story. The seismograph view shows an adjuster the whole case in ten seconds:
-severity waveform, treatment phases, care gaps, and the accident line. The
-workspace gives the attorney a working file: filters and multi-word search,
-milestones with before/after, click-through to every source PDF, and PPT and
-full-record PDF export. Story Mode plays the same case as a scroll cinematic
-for a jury, and the AI layer stays grounded: a draft medical summary labeled as
-a draft, jury-tone rephrasing that never invents facts, and a Q&A chatbot whose
-every claim carries an exhibit citation back to the source row. We're proudest
-that none of it is hardcoded: the app was tested against a deliberately mutated
-unseen file, and dirty data is shown honestly, with an undated-records shelf
-and an import report instead of silent drops.
+severity waveform, treatment phases, care gaps, flagged key events, and the
+accident milestone with a before/after split. The workspace is a real working
+file: search by keyword, provider, or exhibit number, group events by
+provider, medicine type, or body part, click through to every source PDF,
+browse and switch between saved cases, and export to PowerPoint or a
+full-record PDF. Story Mode plays the same case as a scroll-driven cinematic
+for a jury or client walkthrough. The AI layer stays grounded rather than
+decorative: a clearly-labeled draft medical summary, per-event AI headlines,
+tone-based rephrasing (plain-language, clinical, or jury-facing, always from
+the source facts, never invented), and a Q&A chatbot, running on an n8n
+workflow with a MiniMax model, that answers only from the case and cites every
+claim back to its exhibit. We're proudest that none of it is hardcoded: the
+app was stress-tested against a deliberately mutated unseen file all through
+the build, and dirty data is shown honestly, with an undated-records shelf and
+an import report instead of silent drops.
