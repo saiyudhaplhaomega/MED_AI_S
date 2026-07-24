@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.*
+*.local
+.vercel/
+SWANS_INSTRUCTIONS/
+graphify-out/
+public/samples/
+.DS_Store

@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens for the "Case Seismograph" direction.
+ * Rules (see docs/CONTRACTS.md):
+ *  - Crimson is reserved for the accident marker. Nothing else may use it.
+ *  - Severity is encoded by size/height plus the navy ramp, never by hue alone.
+ *  - Hue is reserved for medicine-type categories (colorblind-safe palette).
+ */
+@theme {
+  --color-ink: #0b1437;
+  --color-ink-soft: #3a4368;
+  --color-paper: #fafaf8;
+  --color-line: #e4e2dc;
+  --color-accident: #c02434;
+  --color-flag: #b7791f;
+
+  --color-sev1: #c9cdd9;
+  --color-sev2: #8a93b0;
+  --color-sev3: #4a5680;
+  --color-sev4: #0b1437;
+
+  --color-cat1: #0072b2;
+  --color-cat2: #e69f00;
+  --color-cat3: #009e73;
+  --color-cat4: #cc79a7;
+  --color-cat5: #56b4e9;
+  --color-cat6: #d55e00;
+  --color-cat7: #8b7d00;
+  --color-cat-unknown: #999999;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
