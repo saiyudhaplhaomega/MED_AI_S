@@ -21,7 +21,11 @@ async function probe(name: string, url: string, headers: Record<string, string>,
         name,
         status: response.status,
         baseResp: parsed?.base_resp ?? null,
-        content: parsed?.choices?.[0]?.message?.content?.slice(0, 80) ?? null,
+        error: parsed?.error ?? null,
+        content:
+          parsed?.choices?.[0]?.message?.content?.slice(0, 80) ??
+          parsed?.candidates?.[0]?.content?.parts?.[0]?.text?.slice(0, 80) ??
+          null,
       };
     } catch {
       return { name, status: response.status, snippet: text.slice(0, 220) };
@@ -41,14 +45,16 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  const v2 = "https://api.minimax.io/v1/text/chatcompletion_v2";
-  const auth = { authorization: `Bearer ${key}` };
-  const messages = [{ role: "user", content: "Say hi in two words." }];
+  const geminiKey = process.env.GEMINI_API_KEY || "";
+  const geminiModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
   const results = await Promise.all([
-    probe("v2 role/content MiniMax-M2.7", v2, auth, { model: "MiniMax-M2.7", messages, max_tokens: 16 }),
-    probe("v2 role/content MiniMax-M1", v2, auth, { model: "MiniMax-M1", messages, max_tokens: 16 }),
-    probe("v2 role/content MiniMax-Text-01", v2, auth, { model: "MiniMax-Text-01", messages, max_tokens: 16 }),
+    probe(
+      `gemini ${geminiModel} (key ${geminiKey ? "present" : "MISSING"})`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`,
+      {},
+      { contents: [{ role: "user", parts: [{ text: "Say hi in two words." }] }] }
+    ),
   ]);
 
   res.statusCode = 200;
