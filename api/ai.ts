@@ -5,7 +5,7 @@
  */
 
 const MINIMAX_BASE_URL = process.env.MINIMAX_BASE_URL || "https://api.minimax.io/v1";
-const MINIMAX_MODEL = process.env.MINIMAX_MODEL || "MiniMax-M2";
+const MINIMAX_MODEL = process.env.MINIMAX_MODEL || "MiniMax-M2.7";
 
 const GUARDRAILS =
   "Never invent facts that are not present in the provided material. Do not give legal or medical advice or diagnoses. Keep the patient's dignity: no lurid or sensational language.";
