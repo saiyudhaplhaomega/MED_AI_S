@@ -7,6 +7,22 @@ personal-injury attorneys.
 
 Built for the Swans Applied AI Hackathon, 24 July 2026.
 
+## See it in action
+
+### Cinematic landing experience
+
+![MEDALS cinematic landing scene, showing a courtroom treatment-story visual](docs/images/medals-landing-story.png)
+
+The Higgsfield-produced landing sequence introduces how a fragmented medical
+record becomes a clear treatment story before the attorney enters the workspace.
+
+### Attorney workspace
+
+![MEDALS workspace, with case statistics, accident-date marker, Seismograph, key events, and record search](docs/images/medals-workspace.png)
+
+The workspace keeps the case overview, timeline, key evidence, and searchable
+medical records together on one evidence-first screen.
+
 ## What it does
 
 Upload a medical chronology Excel (any file in the standard format: encounter
